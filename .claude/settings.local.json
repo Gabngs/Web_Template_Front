@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rsync -av --exclude=node_modules --exclude=.git --exclude=README.md /tmp/web-template-front/ '/c/Users/programador01/Documents/visual code/Archivos/WebAPP/Web_Template_Front/')"
+    ]
+  }
+}

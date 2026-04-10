@@ -1,0 +1,269 @@
+
+
+GUÍA GOOGLE CLOUD CONSOLE
+Para probar con este template (una sola vez)
+Paso 1 — Crear proyecto en Google Cloud
+
+Ir a console.cloud.google.com
+Clic en el selector de proyecto (arriba) → New Project
+Nombre: web-template-dev → Create
+Paso 2 — Activar la API necesaria
+
+Menú izquierdo → APIs & Services → Library
+Buscar Google Identity → Google Identity Toolkit API → Enable (También puede aparecer como "Identity Platform")
+Paso 3 — Crear las credenciales OAuth 2.0
+
+Menú izquierdo → APIs & Services → Credentials
+Clic en + CREATE CREDENTIALS → OAuth 2.0 Client ID
+Si pide configurar la pantalla de consentimiento → clic en Configure Consent Screen:
+User Type: External → Create
+App name: Web Template Dev
+User support email: tu correo
+Developer contact email: tu correo
+Guardar y continuar (dejar vacío el resto)
+En Scopes → Add: email, profile, openid → continuar
+En Test Users → agregar tu cuenta de Google → continuar → Back to Dashboard
+Volver a Credentials → + CREATE CREDENTIALS → OAuth 2.0 Client ID
+Application type: Web application
+Name: web-template-local
+Authorized JavaScript origins — agregar:
+
+http://localhost:4200
+Authorized redirect URIs:
+Si usas rama main (Sanctum): No necesitas URIs de redirección. El frontend solo llama al backend.
+Si usas rama keycloak: Agregar:
+
+http://localhost:8080/realms/web-template/broker/google/endpoint
+Clic en Create
+Aparece una ventana con Client ID y Client Secret → copiar ambos
+Paso 4 — Configurar el .env
+
+Rama main:
+
+
+GOOGLE_CLIENT_ID=123456789-xxxx.apps.googleusercontent.com
+Rama feat/keycloak-auth:
+
+
+GOOGLE_CLIENT_ID=123456789-xxxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=GOCSPX-xxxxxxxxxxxx
+Paso 5 — Levantar y probar
+
+
+sail up -d
+sail artisan migrate
+Abrir el frontend en http://localhost:4200 → botón "Iniciar sesión con Google".
+
+Para cada proyecto nuevo que se clone
+Cada proyecto necesita sus propias credenciales porque Google exige que las URIs autorizadas coincidan con el dominio real. Los pasos son los mismos, cambiando solo los nombres y URLs:
+
+Campo	Desarrollo	Producción
+Project name	cliente-a-dev	cliente-a-prod
+Authorized JS Origins	http://localhost:4200	https://app.clientea.com
+Redirect URI (keycloak)	http://localhost:8080/realms/...	https://auth.clientea.com/realms/...
+Pasos concretos al clonar:
+
+Clonar el repo: git clone ...
+Copiar .env.example → .env, ajustar APP_NAME, DB_DATABASE, APP_PORT, etc.
+Ir a Google Cloud Console → crear un nuevo OAuth 2.0 Client ID para ese proyecto
+Pegar GOOGLE_CLIENT_ID (y GOOGLE_CLIENT_SECRET si es rama keycloak) en el .env
+sail up -d && sail artisan migrate
+-------------------------------------------------------------------------
+PROMPT PARA EL FRONTEND (Angular)
+
+Asunto: Integración de Login con Google + Modal de Contraseña
+
+Contexto del backend:
+El backend tiene dos modos de autenticación dependiendo de la rama:
+  - rama main        → Sanctum (token propio). Google verifica directo en backend.
+  - rama keycloak    → Keycloak OIDC. Google llega vía Identity Provider de Keycloak.
+
+A continuación todos los cambios necesarios en el frontend Angular.
+
+─────────────────────────────────────────
+CAMBIOS COMUNES A AMBAS RAMAS
+─────────────────────────────────────────
+
+1. MODELO DE USUARIO — actualizar la interfaz User
+
+   Agregar los nuevos campos que devuelve el backend en /api/auth/me y en los
+   responses de login:
+
+   export interface User {
+     id: number;
+     name: string;
+     email: string;
+     user_avatar_url: string | null;   // ← nuevo: reemplaza a `avatar`
+     is_active: boolean;
+     roles: string[];
+     requires_password_setup: boolean; // ← nuevo: true = modal de contraseña
+   }
+
+   export interface AuthResponse {
+     access_token: string;
+     token_type: string;
+     expires_in: number;
+     requires_password_setup: boolean; // ← nuevo
+     user: User;
+   }
+
+2. AVATAR DEL USUARIO — en cualquier componente donde se muestre el avatar
+
+   Antes:  <img [src]="user.avatar">
+   Ahora:  <img [src]="user.user_avatar_url || 'assets/images/default-avatar.png'"
+                [alt]="user.name">
+
+   La propiedad unificada es SIEMPRE user_avatar_url, tanto para usuarios de
+   Google como para los que suban foto manual en el futuro.
+
+3. MODAL DE CONTRASEÑA — componente nuevo SetupPasswordModalComponent
+
+   Mostrar este modal cuando la respuesta de cualquier login contenga:
+     requires_password_setup === true
+
+   El modal tiene:
+     - Título: "Establece tu contraseña"
+     - Texto informativo: "Iniciaste sesión con Google. Para poder acceder también
+       con tu email y contraseña, establece una ahora."
+     - Campo 1: "Nueva contraseña" (type="password", mínimo 8 caracteres)
+     - Campo 2: "Confirmar contraseña" (type="password")
+     - Botón "Guardar contraseña"
+     - Enlace/botón "Ahora no" (cierra el modal, el usuario puede hacerlo después)
+
+   El modal NO debe ser bloqueante: el usuario puede cerrarlo y seguir usando
+   la aplicación. Al cerrar, no volver a mostrarlo en la misma sesión (usar
+   sessionStorage para evitar que aparezca en cada navegación).
+
+   Si el usuario cierra sesión y vuelve a hacer login con Google, el modal
+   aparecerá nuevamente (porque requires_password_setup sigue siendo true).
+
+4. ENDPOINT PARA GUARDAR CONTRASEÑA
+
+   POST /api/auth/setup-password
+   Authorization: Bearer {token}
+   Body: { password: string, password_confirmation: string }
+
+   En AuthService agregar:
+
+   setupPassword(password: string): Observable<any> {
+     return this.http.post(`${this.apiUrl}/auth/setup-password`, {
+       password,
+       password_confirmation: password  // el usuario escribió el mismo valor en ambos campos
+     });
+   }
+
+   Al recibir respuesta 200:
+     - Actualizar el user en el store/servicio local: requires_password_setup = false
+     - Cerrar el modal
+     - Mostrar notificación de éxito: "Contraseña guardada correctamente"
+
+─────────────────────────────────────────
+SOLO RAMA main (Sanctum + Google directo)
+─────────────────────────────────────────
+
+5. INSTALAR SDK DE GOOGLE IDENTITY SERVICES
+
+   En index.html (dentro de <head>):
+   <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+6. ENVIRONMENT
+
+   En environment.ts y environment.prod.ts agregar:
+   googleClientId: 'TU_CLIENT_ID.apps.googleusercontent.com'
+
+7. LOGIN CON GOOGLE — en el componente de Login
+
+   a) En el template, agregar el contenedor del botón oficial de Google:
+      <div id="google-btn"></div>
+
+   b) En el componente TypeScript:
+
+   declare const google: any;
+
+   ngAfterViewInit(): void {
+     google.accounts.id.initialize({
+       client_id: environment.googleClientId,
+       callback: (response: { credential: string }) => {
+         this.handleGoogleCredential(response.credential);
+       }
+     });
+
+     google.accounts.id.renderButton(
+       document.getElementById('google-btn'),
+       { theme: 'outline', size: 'large', text: 'signin_with', locale: 'es' }
+     );
+   }
+
+   handleGoogleCredential(idToken: string): void {
+     this.authService.loginWithGoogle(idToken).subscribe({
+       next: (res: AuthResponse) => {
+         this.authService.saveSession(res); // guardar token, user en storage/store
+         if (res.requires_password_setup) {
+           this.openSetupPasswordModal();
+         } else {
+           this.router.navigate(['/dashboard']);
+         }
+       },
+       error: () => this.showError('No se pudo iniciar sesión con Google')
+     });
+   }
+
+8. MÉTODO EN AuthService
+
+   loginWithGoogle(idToken: string): Observable<AuthResponse> {
+     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/google`, {
+       id_token: idToken
+     });
+   }
+
+─────────────────────────────────────────
+SOLO RAMA keycloak (Keycloak OIDC)
+─────────────────────────────────────────
+
+9. EL BOTÓN "INICIAR SESIÓN CON GOOGLE" NO LLAMA A GOOGLE DIRECTAMENTE.
+   Redirige al flujo OAuth de Keycloak indicando el IDP:
+
+   loginWithGoogle(): void {
+     const kcUrl   = environment.keycloakUrl;   // ej: http://localhost:8080
+     const realm   = environment.keycloakRealm; // ej: web-template
+     const clientId = environment.keycloakClientId; // ej: web-frontend
+     const redirectUri = encodeURIComponent(window.location.origin + '/auth/callback');
+
+     window.location.href =
+       `${kcUrl}/realms/${realm}/protocol/openid-connect/auth` +
+       `?client_id=${clientId}` +
+       `&redirect_uri=${redirectUri}` +
+       `&response_type=code` +
+       `&scope=openid+profile+email` +
+       `&kc_idp_hint=google`;  // ← este parámetro hace que Keycloak vaya directo a Google
+   }
+
+   El resto del flujo (recibir el code, intercambiarlo por token, guardar sesión)
+   es idéntico al login normal de Keycloak que ya tienes implementado.
+
+10. identity_provider en el modelo de usuario (solo keycloak)
+
+    El /api/auth/me de la rama keycloak devuelve también:
+      identity_provider: 'google' | null
+
+    Esto puede usarse para mostrar un badge "Cuenta de Google" en el perfil
+    del usuario si identity_provider === 'google'.
+
+─────────────────────────────────────────
+FLUJO COMPLETO RESUMIDO
+─────────────────────────────────────────
+
+  Usuario hace click en "Iniciar sesión con Google"
+       ↓
+  [main]    Google SDK → idToken → POST /api/auth/google
+  [keycloak] Redirect a Keycloak con kc_idp_hint=google → callback normal
+       ↓
+  Backend devuelve { access_token, requires_password_setup, user }
+       ↓
+  Guardar token y datos del usuario
+       ↓
+  ¿requires_password_setup === true?
+    SÍ → Mostrar modal de contraseña (no bloqueante)
+    NO → Navegar a /dashboard
+       ↓
+  En cualquier pantalla mostrar user.user_avatar_url como foto de perfil
