@@ -1,0 +1,123 @@
+<p-confirmDialog />
+
+<div class="admin-page admin-page--wide">
+  <h2>Mantenimiento de Roles</h2>
+
+  @if (!canView()) {
+  <p class="admin-page__denied">No tenés permisos para ver el catálogo de roles.</p>
+  } @else {
+  <p-toolbar>
+    <ng-template pTemplate="left">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input pInputText type="text" placeholder="Buscar..."
+          (input)="dt.filterGlobal($any($event.target).value, 'contains')" aria-label="Buscar roles" />
+      </p-iconfield>
+    </ng-template>
+    <ng-template pTemplate="right">
+      @if (canCreate()) {
+      <p-button type="button" label="Nuevo Rol" icon="pi pi-plus" [style]="{'min-width':'155px'}"
+        severity="success" variant="outlined" [raised]="true" (onClick)="openNew()"></p-button>
+      }
+    </ng-template>
+  </p-toolbar>
+
+  <div class="table-container">
+    <p-table #dt [value]="data()" [paginator]="true" [rows]="rows" [rowsPerPageOptions]="rowsPerPageOptions"
+      [scrollable]="true" scrollHeight="flex" [showCurrentPageReport]="true" [currentPageReportTemplate]="tableMessage"
+      [globalFilterFields]="['name', 'slug', 'descripcion']">
+
+      <ng-template #header>
+        <tr>
+          <th scope="col" pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+          <th scope="col" pSortableColumn="slug">Slug <p-sortIcon field="slug" /></th>
+          <th scope="col">Descripción</th>
+          <th scope="col">Estado</th>
+          @if (canUpdate() || canDelete()) {
+          <th scope="col" style="text-align: center;">Acciones</th>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-item>
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.slug }}</td>
+          <td>{{ item.descripcion }}</td>
+          <td>
+            @if (canUpdate()) {
+            <button pButton type="button" [label]="item.activo ? 'Activo' : 'Inactivo'"
+              [severity]="item.activo ? 'success' : 'danger'" class="p-button-sm p-button-outlined"
+              [disabled]="loading()" [attr.aria-label]="item.activo ? 'Inactivar rol' : 'Activar rol'"
+              (click)="cambiarEstado(item)"></button>
+            } @else {
+            <p-tag [value]="item.activo ? 'Activo' : 'Inactivo'" [severity]="item.activo ? 'success' : 'danger'" />
+            }
+          </td>
+          @if (canUpdate() || canDelete()) {
+          <td class="text-align-center">
+          @if (canUpdate()) {
+            <button pButton icon="pi pi-shield"  class="p-button-rounded p-button-text"
+              (click)="openPermisos(item)" title="Asignar permisos"></button>
+           
+            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
+              (click)="openEdit(item)" title="Editar"></button>
+            }
+            @if (canDelete()) {
+            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+              (click)="confirmDelete(item)" title="Eliminar"></button>
+            }
+          </td>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="text-center">No se encontraron roles.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+  }
+</div>
+
+<p-dialog [(visible)]="showDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '450px' }"
+  [header]="editMode() ? 'Editar Rol' : 'Nuevo Rol'">
+  <form class="admin-form" (ngSubmit)="save()">
+    <p-floatlabel>
+      <input pInputText id="name" [(ngModel)]="form.name" name="name" class="admin-form__input" />
+      <label for="name">Nombre *</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <input pInputText id="slug" [(ngModel)]="form.slug" name="slug" class="admin-form__input" />
+      <label for="slug">Slug *</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <textarea pTextarea id="descripcion" [(ngModel)]="form.descripcion" name="descripcion" rows="2"
+        class="admin-form__input"></textarea>
+      <label for="descripcion">Descripción</label>
+    </p-floatlabel>
+
+    <div class="flex items-center gap-2">
+      <p-toggleswitch inputId="activo" [(ngModel)]="form.activo" name="activo" />
+      <label for="activo">Activo</label>
+    </div>
+
+    <p-button type="submit" label="Guardar" [loading]="loading()" class="admin-form__submit" />
+  </form>
+</p-dialog>
+
+<!-- ═══════════════ Dialog: Asignar Permisos ═══════════════ -->
+<app-asignacion-picklist-dialog
+  [(visible)]="showPermisosDialog"
+  [header]="'Permisos del rol ' + (rolPermisos?.name ?? '')"
+  [subtitulo]="'Asigná los permisos que tendrá el rol ' + (rolPermisos?.name ?? '') + '.'"
+  [disponibles]="sourcePermisos()"
+  [asignados]="targetPermisos()"
+  tipo="permiso"
+  [loading]="loadingPermisos()"
+  (guardar)="savePermisos($event)"
+/>

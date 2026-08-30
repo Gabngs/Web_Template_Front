@@ -1,0 +1,8 @@
+// .table-container es compartido — ver "Contenedor de Tabla y Scroll" en el
+// estándar y src/styles.scss. Esta pantalla no necesita reglas propias.
+
+.icon-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}

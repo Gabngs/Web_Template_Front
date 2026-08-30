@@ -1,0 +1,118 @@
+.nf {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  overflow: auto;
+
+  &__card {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.35rem;
+    padding: 2.75rem 2rem 2.25rem;
+    background: var(--p-content-background);
+    border: 1px solid var(--p-content-border-color);
+    border-radius: 1.25rem;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 12px 32px -12px rgba(0, 0, 0, 0.18);
+    animation: nf-in 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  // ── Hero: número fantasma + anillos girando ──
+  &__hero {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  &__ghost {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max-content;
+    transform: translate(-50%, -50%);
+    font-size: 12em;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--p-primary-color);
+    opacity: 0.1;
+    user-select: none;
+  }
+
+  &__anillos {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    --anillos-tamano: 130px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+
+  &__text {
+    margin: 0.25rem 0 0;
+    max-width: 34ch;
+    color: var(--p-text-muted-color);
+    line-height: 1.5;
+  }
+
+  &__actions {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 0;
+    background: transparent;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+    cursor: pointer;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--p-content-border-radius);
+    transition:
+      color 0.15s,
+      background-color 0.15s;
+
+    &:hover {
+      color: var(--p-text-color);
+      background: var(--p-content-hover-background, rgba(0, 0, 0, 0.04));
+    }
+  }
+}
+
+@keyframes nf-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf__card {
+    animation: none;
+  }
+}

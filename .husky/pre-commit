@@ -1,0 +1,2 @@
+node scripts/generate-routes.mjs
+git add -- '*.routes.ts'

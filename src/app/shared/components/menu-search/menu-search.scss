@@ -1,0 +1,41 @@
+// El resto del layout (flex, gap, padding, truncado) sale de clases de
+// PrimeFlex directo en el template — acá solo lo que depende de variables
+// de tema (PrimeFlex no las conoce) y lo que ningún util cubre.
+:host ::ng-deep .menu-search-dialog .p-dialog-content {
+  padding: 0;
+  border-radius: var(--p-content-border-radius);
+  overflow: hidden;
+}
+
+.menu-search__input {
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  input {
+    outline: none;
+    background: transparent;
+    font-size: 1.05rem;
+  }
+}
+
+.menu-search__lista {
+  max-height: 380px;
+}
+
+.menu-search__item.activo,
+.menu-search__item:hover {
+  background: var(--p-surface-hover);
+}
+
+.menu-search__footer {
+  border-top: 1px solid var(--p-content-border-color);
+
+  kbd {
+    display: inline-block;
+    font: inherit;
+    padding: .1rem .4rem;
+    border-radius: calc(var(--p-content-border-radius) - 2px);
+    border: 1px solid var(--p-content-border-color);
+    background: var(--p-surface-hover);
+    color: var(--p-text-color);
+  }
+}

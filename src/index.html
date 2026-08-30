@@ -1,16 +1,29 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <title>Sakai - PrimeNG</title>
-        <base href="/" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="preconnect" href="https://primefaces.org" />
-        <link rel="icon" type="image/x-icon" href="https://primefaces.org/cdn/primeng/images/favicon.png" />
-        <link href="https://fonts.cdnfonts.com/css/lato" rel="stylesheet" />
-    </head>
-
-    <body>
-        <app-root></app-root>
-    </body>
+<head>
+  <meta charset="utf-8">
+  <title>Web Template</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="google" content="notranslate">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Aplica .app-dark ANTES del primer paint — evita el flash de fondo
+    // claro mientras Angular arranca (ThemeService recién corre en su
+    // constructor, cuando el primer componente que lo inyecta se crea).
+    // La key debe coincidir con THEME_KEY en theme-storage.service.ts.
+    (function () {
+      try {
+        var stored = localStorage.getItem('ui_theme_dark');
+        var dark = stored === null
+          ? window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+          : stored === 'true';
+        if (dark) document.documentElement.classList.add('app-dark');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <app-root translate="no" class="notranslate"></app-root>
+</body>
 </html>

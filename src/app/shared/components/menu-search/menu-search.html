@@ -1,0 +1,62 @@
+<p-dialog
+  [(visible)]="abierto"
+  [modal]="true"
+  [dismissableMask]="false"
+  [showHeader]="false"
+  [style]="{ width: '560px' }"
+  [breakpoints]="{ '640px': '95vw' }"
+  styleClass="menu-search-dialog"
+>
+  <div class="flex flex-col">
+    <div class="menu-search__input flex items-center gap-2 p-4">
+      <i class="pi pi-search text-muted-color"></i>
+      <input
+        pInputText
+        type="text"
+        class="flex-1 border-none shadow-none"
+        placeholder="Buscar un menú..."
+        [ngModel]="termino()"
+        (ngModelChange)="onTerminoChange($event)"
+        autofocus
+      />
+    </div>
+
+    <ul class="menu-search__lista list-none m-0 p-2 overflow-y-auto">
+      @for (item of resultados(); track item.id; let i = $index) {
+        <li
+          class="menu-search__item flex items-center gap-4 p-2 rounded cursor-pointer"
+          [class.activo]="i === indiceActivo()"
+          (mouseenter)="indiceActivo.set(i)"
+          (click)="navegar(item)"
+        >
+          <p-avatar
+            [icon]="'pi pi-' + (item.nombre_icon ?? 'circle')"
+            shape="square"
+            [style]="{ background: 'var(--p-primary-color)', color: 'var(--p-primary-contrast-color)', 'border-radius': '.65rem' }"
+          />
+          <div class="flex flex-col flex-1 min-w-0">
+            <span class="font-medium">{{ item.titulo }}</span>
+            @if (item.descripcion) {
+              <span class="text-sm text-muted-color whitespace-nowrap overflow-hidden text-ellipsis">
+                {{ item.descripcion }}
+              </span>
+            }
+          </div>
+          @if (item.parentTitulo) {
+            <p-tag [value]="item.parentTitulo" severity="secondary" styleClass="flex-shrink-0" />
+          }
+        </li>
+      } @empty {
+        <li class="flex flex-col items-center gap-2 p-8 text-muted-color">
+          <i class="pi pi-inbox text-2xl"></i>
+          <span>Sin resultados.</span>
+        </li>
+      }
+    </ul>
+
+    <div class="menu-search__footer flex items-center justify-end gap-4 p-4 text-sm text-muted-color">
+      <span><kbd>Esc</kbd> cerrar</span>
+      <span><kbd>Ctrl</kbd> + <kbd>K</kbd> acceso rápido</span>
+    </div>
+  </div>
+</p-dialog>

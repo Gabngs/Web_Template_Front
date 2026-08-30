@@ -1,0 +1,98 @@
+@use 'sass:math';
+
+// 8 anillos concéntricos (la mitad del diseño original de 16). Cada anillo
+// gira 360° sobre su eje X a distinta velocidad y TODO el conjunto rota
+// además sobre el eje Z manteniendo la inclinación 3D — así el giro se ve
+// claramente, no solo el cambio de color. El borde recorre un ciclo rgba.
+$anillos: 8;
+$velocidad: 12s;
+
+:host {
+  display: block;
+  // Tamaño por defecto (~20% más chico que la primera versión). El
+  // componente que la monta puede sobreescribir --anillos-tamano.
+  --anillos-tamano: clamp(128px, 24vh, 240px);
+}
+
+.anillos {
+  position: relative;
+  width: var(--anillos-tamano);
+  height: var(--anillos-tamano);
+  transform-style: preserve-3d;
+  animation: al-conjunto 9s linear infinite;
+}
+
+.anillo {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  animation-name: al-girar, al-color;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear, ease-in-out;
+}
+
+@for $i from 1 through $anillos {
+  .anillo:nth-child(#{$i}) {
+    $local: calc(var(--anillos-tamano) - var(--anillos-tamano) / #{$anillos} * #{$i - 1});
+    width: $local;
+    height: $local;
+    left: calc(var(--anillos-tamano) / #{$anillos} * #{$i - 1} / 2);
+    top: calc(var(--anillos-tamano) / #{$anillos} * #{$i - 1} / 2);
+    // Anillo exterior lento, interiores cada vez más rápidos.
+    animation-duration: #{math.div($velocidad, $i)}, #{6s + 0.5s * $i};
+    animation-delay: #{-0.4s * $i}, #{-0.9s * $i};
+  }
+}
+
+// Anillos pares: trazo punteado.
+.anillo:nth-child(even) {
+  border-style: dashed;
+}
+
+// El conjunto entero gira sobre Z manteniendo la inclinación 3D.
+@keyframes al-conjunto {
+  from {
+    transform: perspective(1000px) rotateY(35deg) rotateX(35deg) rotateZ(0deg);
+  }
+  to {
+    transform: perspective(1000px) rotateY(35deg) rotateX(35deg) rotateZ(360deg);
+  }
+}
+
+@keyframes al-girar {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(360deg);
+  }
+}
+
+// El color del borde recorre un ciclo rgba a la vez que el anillo gira.
+@keyframes al-color {
+  0% {
+    border-color: rgba(99, 102, 241, 0.9);
+  }
+  25% {
+    border-color: rgba(236, 72, 153, 0.9);
+  }
+  50% {
+    border-color: rgba(56, 189, 248, 0.9);
+  }
+  75% {
+    border-color: rgba(52, 211, 153, 0.9);
+  }
+  100% {
+    border-color: rgba(99, 102, 241, 0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anillos {
+    animation: none;
+    transform: perspective(1000px) rotateY(20deg) rotateX(20deg);
+  }
+  .anillo {
+    animation: al-color 4s ease-in-out infinite;
+  }
+}

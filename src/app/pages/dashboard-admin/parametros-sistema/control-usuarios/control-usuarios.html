@@ -1,0 +1,173 @@
+<p-confirmDialog />
+
+<div class="admin-page admin-page--wide">
+  <h2>Control de usuarios</h2>
+
+  @if (!canView()) {
+  <p class="admin-page__denied">No tenés permisos para ver el listado de usuarios.</p>
+  } @else {
+  <p-toolbar>
+    <ng-template pTemplate="left">
+      <div class="flex flex-col gap-2 w-full">
+        <div class="flex flex-col sm:flex-row gap-2 w-full">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input pInputText type="text" placeholder="Buscar por nombre, email o código..." [ngModel]="searchTerm()"
+              (ngModelChange)="searchTerm.set($event)" (keyup.enter)="aplicarFiltros()" aria-label="Buscar usuarios" />
+          </p-iconfield>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full">
+          <p-select [options]="roles" optionLabel="name" optionValue="id" placeholder="Rol" [showClear]="true"
+            [ngModel]="rolFiltro()" (ngModelChange)="rolFiltro.set($event); aplicarFiltros()" />
+
+          <p-select [options]="estados" optionLabel="label" optionValue="value" placeholder="Estado" [showClear]="true"
+            [ngModel]="activoFiltro()" (ngModelChange)="activoFiltro.set($event); aplicarFiltros()" />
+
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="right">
+      <div class="flex flex-col gap-2 w-full">
+        <div class="flex flex-col sm:flex-row gap-2 w-full">
+          <div style="min-width: 155px;"></div>
+          <p-button type="button" label="Actualizar" icon="pi pi-refresh" [style]="{'min-width':'155px'}" 
+           severity="help" variant="outlined" [raised]="true" (onClick)="aplicarFiltros()"></p-button>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2 w-full">
+
+          @if (canCreate()) {
+          <p-button type="button" label="Nuevo Usuario" icon="pi pi-plus" [style]="{'min-width':'155px'}"
+            severity="success" variant="outlined" [raised]="true" (onClick)="openNew()"></p-button>
+          }
+          <p-button [disabled]="!hasActiveFilters()" type="button" label="Limpiar" icon="pi pi-filter-slash" [style]="{'min-width':'155px'}"
+            severity="warn" variant="outlined" [raised]="true" (onClick)="limpiarFiltros()"></p-button>
+        </div>
+      </div>
+    </ng-template>
+  </p-toolbar>
+
+  <div class="table-container">
+    <p-table #dt [value]="data()" [paginator]="true" [rows]="rows" [rowsPerPageOptions]="rowsPerPageOptions"
+      [totalRecords]="totalRecords()" [first]="first" [lazy]="true" [lazyLoadOnInit]="false"
+      (onLazyLoad)="onLazyLoad($event)" [scrollable]="true" scrollHeight="flex">
+
+      <ng-template #header>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Apellidos</th>
+          <th scope="col">Email</th>
+          <th scope="col">Código</th>
+          <th scope="col">Rol</th>
+          <th scope="col">Estado</th>
+          @if (canUpdate() || canDelete()) {
+          <th scope="col" style="width: 120px">Acciones</th>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-usuario>
+        <tr>
+          <td>{{ usuario.nombre }}</td>
+          <td>{{ usuario.apellidos }}</td>
+          <td>{{ usuario.email }}</td>
+          <td>{{ usuario.codigo }}</td>
+          <td>{{ usuario.rol?.name ?? 'Sin rol' }}</td>
+          <td>
+            @if (canUpdate()) {
+            <button pButton type="button" [label]="usuario.activo ? 'Activo' : 'Inactivo'"
+              [severity]="usuario.activo ? 'success' : 'danger'" class="p-button-sm p-button-outlined"
+              [disabled]="loading()" [attr.aria-label]="usuario.activo ? 'Inactivar usuario' : 'Activar usuario'"
+              (click)="cambiarEstado(usuario)"></button>
+            } @else {
+            <p-tag [value]="usuario.activo ? 'Activo' : 'Inactivo'"
+              [severity]="usuario.activo ? 'success' : 'danger'" />
+            }
+          </td>
+          @if (canUpdate() || canDelete()) {
+          <td>
+            @if (canUpdate()) {
+            <button pButton icon="pi pi-user-edit" class="p-button-rounded p-button-text p-button-help"
+              (click)="openAsignarRol(usuario)" title="Asignar rol"></button>
+            <button pButton icon="pi pi-shield" class="p-button-rounded p-button-text" (click)="openPermisos(usuario)"
+              title="Asignar permiso"></button>
+            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
+              (click)="openEdit(usuario)" title="Editar"></button>
+            <button pButton icon="pi pi-key" class="p-button-rounded p-button-text p-button-secondary"
+              [disabled]="loading()" (click)="confirmResetPassword(usuario)" title="Restablecer contraseña"></button>
+            <button pButton icon="pi pi-lock-open" class="p-button-rounded p-button-text p-button-secondary"
+              [disabled]="loading()" (click)="confirmDesbloquear(usuario)" title="Desbloquear acceso"></button>
+            }
+            @if (canDelete()) {
+            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+              (click)="confirmDelete(usuario)" title="Eliminar"></button>
+            }
+          </td>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="text-center">No se encontraron usuarios.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+  }
+</div>
+
+<p-dialog [(visible)]="showDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '450px' }"
+  [header]="editMode() ? 'Editar datos de: ' + (dataItem()?.nombre ?? '') : 'Nuevo Usuario'">
+  <form class="admin-form" (ngSubmit)="save()">
+    @if (!editMode()) {
+    <p class="admin-page__sub">El backend genera una contraseña temporal y la envía por correo.</p>
+    }
+
+    <p-floatlabel>
+      <input pInputText id="nombre" [(ngModel)]="form.nombre" name="nombre" class="admin-form__input" />
+      <label for="nombre">Nombre *</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <input pInputText id="apellidos" [(ngModel)]="form.apellidos" name="apellidos" class="admin-form__input" />
+      <label for="apellidos">Apellidos</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <input pInputText id="email" type="email" [(ngModel)]="form.email" name="email" class="admin-form__input" />
+      <label for="email">Correo electrónico *</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <p-select inputId="rol_id" [(ngModel)]="form.rol_id" name="rol_id" [options]="roles" optionLabel="name"
+        appendTo="body" optionValue="id" [showClear]="true" class="admin-form__input" />
+      <label for="rol_id">Rol</label>
+    </p-floatlabel>
+
+    <p-button type="submit" label="Guardar" [loading]="loading()" class="admin-form__submit" />
+  </form>
+</p-dialog>
+
+<!-- ═══════════════ Dialog: Asignar Rol ═══════════════ -->
+<app-asignacion-picklist-dialog
+  [(visible)]="showRolDialog"
+  [header]="'Roles de ' + (usuarioRol?.nombre ?? '')"
+  [subtitulo]="'Asigná los roles de ' + (usuarioRol?.nombre ?? '') + '.'"
+  [disponibles]="sourceRoles()"
+  [asignados]="targetRoles()"
+  tipo="rol"
+  [loading]="loadingRol()"
+  (guardar)="guardarRol($event)"
+/>
+
+<!-- ═══════════════ Dialog: Asignar Permiso ═══════════════ -->
+<app-asignacion-picklist-dialog
+  [(visible)]="showPermisosDialog"
+  [header]="'Permisos directos de ' + (usuarioPermisos?.nombre ?? '')"
+  [subtitulo]="'Asigná permisos puntuales para ' + (usuarioPermisos?.nombre ?? '') + ', por fuera de lo que ya le da su rol.'"
+  [disponibles]="sourcePermisos()"
+  [asignados]="targetPermisos()"
+  tipo="permiso"
+  [loading]="loadingPermisos()"
+  (guardar)="savePermisos($event)"
+/>

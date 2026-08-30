@@ -1,0 +1,69 @@
+<div class="login-page">
+
+  <div class="login-card">
+
+    <!-- Header -->
+    <div class="login-header">
+      <span class="login-brand">
+        <span class="brand-dot">✦</span>
+        <span>{{ appName }}</span>
+      </span>
+      <h1>Acceso privado</h1>
+      <p class="login-sub">Panel de administración</p>
+    </div>
+
+    <!-- Form -->
+    <form class="login-form" (ngSubmit)="submit()">
+
+      <p-floatlabel>
+        <input
+          pInputText
+          id="login-email"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          autocomplete="email"
+          required />
+        <label for="login-email">Correo electrónico</label>
+      </p-floatlabel>
+
+      <p-floatlabel>
+        <p-password
+          inputId="login-pass"
+          [(ngModel)]="password"
+          name="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          required />
+        <label for="login-pass">Contraseña</label>
+      </p-floatlabel>
+
+      @if (error()) {
+        <div class="login-error">
+          <i class="pi pi-exclamation-circle"></i>
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <p-button
+        type="submit"
+        label="Iniciar sesión"
+        icon="pi pi-sign-in"
+        iconPos="right"
+        [loading]="loading()"
+        class="w-full login-btn" />
+
+    </form>
+
+  </div>
+
+  <!-- Background decoration -->
+  <div class="login-bg">
+    <div class="bg-blob b1"></div>
+    <div class="bg-blob b2"></div>
+    <div class="bg-blob b3"></div>
+  </div>
+
+</div>

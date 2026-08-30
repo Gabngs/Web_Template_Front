@@ -1,0 +1,61 @@
+<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [modal]="true"
+  [dismissableMask]="false"
+  [style]="{ width: '920px' }"
+  [maximizable]="true"
+  [header]="header()"
+>
+  @if (subtitulo()) {
+  <p class="asignacion-dialog__sub">{{ subtitulo() }}</p>
+  }
+
+  <p-pickList
+    [source]="source()"
+    [target]="target()"
+    (sourceChange)="source.set($event)"
+    (targetChange)="onTargetChange($event)"
+    dataKey="id"
+    sourceHeader="Disponibles"
+    targetHeader="Asignados"
+    [showSourceFilter]="true"
+    [showTargetFilter]="true"
+    [filterBy]="filterByAttr()"
+    sourceFilterPlaceholder="Buscar…"
+    targetFilterPlaceholder="Buscar…"
+    [responsive]="true"
+    breakpoint="960px"
+    [dragdrop]="!unico()"
+    styleClass="asignacion-dialog__picklist"
+  >
+    <ng-template #item let-item>
+      <div class="asignacion-item">
+        @if (tipo() === 'permiso') {
+        <i class="pi pi-key asignacion-item__icon"></i>
+        <div class="asignacion-item__body">
+          <span class="asignacion-item__code">{{ item.codename }}</span>
+          <span class="asignacion-item__desc">{{ item.desc }}</span>
+        </div>
+        } @else {
+        <i class="pi pi-id-card asignacion-item__icon"></i>
+        <div class="asignacion-item__body">
+          <span class="asignacion-item__name">{{ item.name }}</span>
+        </div>
+        }
+      </div>
+    </ng-template>
+  </p-pickList>
+
+  @if (unico()) {
+  <p class="asignacion-dialog__hint">
+    <i class="pi pi-info-circle"></i>
+    Solo se puede asignar un permiso. Al mover otro, reemplaza al actual.
+  </p>
+  }
+
+  <div class="asignacion-dialog__footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrar()"></button>
+    <p-button label="Guardar" icon="pi pi-check" [loading]="loading()" (onClick)="onGuardar()" />
+  </div>
+</p-dialog>

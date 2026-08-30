@@ -1,0 +1,30 @@
+// Layout armado con PrimeNG (p-card) + style inline en el propio HTML.
+// Reglas propias solo para el grid de accesos directos: CSS Grid con
+// columnas fijas de 180px estira cada celda a la altura de la fila más alta
+// (align-items:stretch, default de grid) — así todas las cards miden igual
+// aunque un título ocupe 1 o 2 líneas, sin alturas fijas a mano.
+.dashboard-accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 180px);
+  gap: 1rem;
+
+  &__link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  &__card {
+    height: 100%;
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    text-align: center;
+    min-height: 4rem;
+  }
+}
