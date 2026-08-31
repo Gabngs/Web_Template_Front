@@ -6,7 +6,7 @@ import { construirArbolMenus, menusAPrimeNgItems, menusPlanosNavegables, IMenuBu
 import { SistemasService } from './sistemas.service';
 
 
-const CODIGO_SISTEMA_PROPIO = 'GSP';
+const CODIGO_SISTEMA_PROPIO = 'NEXO';
 
 @Injectable({ providedIn: 'root' })
 export class PermisoService {

@@ -6,7 +6,7 @@ export const environment = {
   appShortName: 'WT', // sigla corta: footer
 
   // ── Backend ────────────────────────────────────────────────────────────
-  apiUrl: 'http://localhost:8000/api/',
+  apiUrl: 'http://localhost:8877/api/',
   endpoints: {
     auth: {
       publicKey: 'auth/public-key',
