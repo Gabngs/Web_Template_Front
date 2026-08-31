@@ -1,0 +1,80 @@
+// Solo lo que depende de tokens de tema o de estructura interna de p-pickList.
+// El resto (flex/gap/margen) sale de utilidades en el template.
+
+.asignacion-dialog__sub {
+  margin: 0 0 1rem;
+  color: var(--p-text-muted-color);
+  font-size: 0.9rem;
+}
+
+.asignacion-dialog__hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.82rem;
+  color: var(--p-text-muted-color);
+}
+
+.asignacion-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+// ── Fila de item (permiso o rol) ─────────────────────────────
+.asignacion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.15rem 0;
+}
+
+.asignacion-item__icon {
+  margin-top: 0.15rem;
+  font-size: 0.9rem;
+  color: var(--p-primary-color);
+  flex-shrink: 0;
+}
+
+.asignacion-item__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.asignacion-item__code {
+  font-family: var(--p-font-family-mono, ui-monospace, "SFMono-Regular", "Menlo", monospace);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--p-text-color);
+}
+
+.asignacion-item__name {
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+.asignacion-item__desc {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+  white-space: normal;
+}
+
+// Un poco más de aire y feedback de hover en cada lista.
+:host ::ng-deep .asignacion-dialog__picklist {
+  .p-picklist-item {
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--p-content-border-radius);
+  }
+
+  .p-picklist-item:not(.p-disabled):hover {
+    background: var(--p-surface-hover);
+  }
+
+  .p-picklist-list {
+    min-height: 320px;
+  }
+}

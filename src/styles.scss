@@ -1,0 +1,177 @@
+// Layout de Sakai (topbar / sidebar / menu / footer / responsive / utils).
+// Sus clases (.layout-*) quedan inertes hasta que admin-shell use esa
+// estructura; lo que sí aplica ya es la tipografía base y el puente de
+// variables (--surface-*, --primary-color → tokens --p-* de @primeuix).
+@use './assets/layout/layout.scss';
+
+:root {
+  --c-purple: rgb(124, 58, 237);
+  --c-red: rgb(225, 29, 72);
+  --c-blue: rgb(37, 99, 235);
+  --gradient: linear-gradient(135deg, var(--c-purple), var(--c-red), var(--c-blue));
+  --nav-bg: rgba(255, 255, 255, 0.88);
+  --surface-ground-rgb: 248, 248, 252;
+}
+
+html.app-dark {
+  --nav-bg: rgba(12, 12, 20, 0.9);
+  --surface-ground-rgb: 10, 10, 18;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--p-surface-ground);
+  color: var(--p-text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: var(--p-font-family, 'Inter', -apple-system, sans-serif);
+}
+
+// Tipografía de títulos — compacta (reemplaza al _typography.scss de Sakai,
+// que traía h2 a 2rem + 1.5rem de margen y "empujaba" el contenido).
+h1, h2, h3, h4, h5, h6 {
+  margin: 0 0 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--p-text-color);
+}
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.375rem; }
+h3 { font-size: 1.15rem; }
+h4 { font-size: 1rem; }
+
+// Patrón compartido por los formularios simples de registro (Modelos / Permisos / Usuarios).
+// Solo layout — cero color hardcodeado, todo vía variables de PrimeNG.
+.admin-page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+
+  h2 {
+    margin: 0 0 .25rem;
+  }
+
+  &__sub {
+    margin: 0 0 1.5rem;
+    color: var(--p-text-muted-color);
+    font-size: .9rem;
+  }
+
+  &__denied {
+    color: var(--p-text-muted-color);
+  }
+
+
+  &--wide {
+    max-width: none;
+    margin: 0;
+    padding: 1.25rem;
+    background: var(--p-content-background);
+    border: 1px solid var(--p-content-border-color);
+    border-radius: var(--p-content-border-radius);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+// Misma tarjeta que `.admin-page--wide`, para pantallas que no usan el
+// bloque `.admin-page` (ej. las que arrancan directo con `p-tabs`).
+.admin-card {
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__input {
+    width: 100%;
+  }
+
+  &__submit {
+    align-self: flex-start;
+  }
+}
+
+
+// Contenedor de tabla — ver "Contenedor de Tabla y Scroll" en el estándar.
+// Único responsable de que la página nunca haga scroll propio: hereda su
+// alto real vía flexbox de `.admin-page--wide` / `.admin-card` (flex column,
+// min-height:0) y lo pasa a `[scrollHeight]="flex"` de p-table/p-treeTable,
+// que hace el scroll adentro (header sticky incluido, lo maneja PrimeNG
+// solo). No poner overflow ni sticky manual acá — se pisa con lo que ya
+// hace el propio componente. Compartido para no repetirlo en cada módulo.
+.table-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+p-tabs,
+p-tabpanels,
+p-tabpanel[data-p-active='true'] {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+// ── Geometría + scroll interno sobre el layout de Sakai ─────────────────
+// El <main> de app.scss ya no empuja bajo /dashboard (clase .chrome-off).
+// Acá: todo fijo al viewport, topbar 4rem, contenido y sidebar a la misma
+// altura justo debajo, y el scroll vive DENTRO de la tabla ([scrollHeight]="flex").
+$topbar-h: 4rem;
+$gap: 0.5rem;
+
+.layout-wrapper {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-sidebar {
+  top: calc(#{$topbar-h} + #{$gap});
+  height: calc(100vh - #{$topbar-h} - #{$gap} * 2);
+}
+
+.layout-main-container {
+  height: 100vh;
+  min-height: 0;
+  padding: calc(#{$topbar-h} + #{$gap}) 1.5rem 0 1.5rem;
+  overflow: hidden;
+  justify-content: flex-start;
+}
+
+.layout-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0 #{$gap} 0;
+}
+
+// El componente que inserta cada ruta (ej. <app-mantenimiento-menus>) queda
+// como hermano de <router-outlet> dentro de `.layout-main`. Ese tag no es un
+// elemento HTML conocido → `display:inline` por default y sin flex-grow, así
+// que aunque adentro `.admin-page--wide`/`.admin-card` pidan `flex:1` +
+// `min-height:0`, no tienen de dónde estirarse. Va en este archivo global
+// (sin scoping) porque ningún .scss de componente puede seleccionar un tag
+// que pertenece a OTRO componente instanciado por el router.
+.layout-main > router-outlet + * {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}

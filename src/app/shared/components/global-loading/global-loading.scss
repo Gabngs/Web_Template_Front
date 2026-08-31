@@ -1,0 +1,25 @@
+.global-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  background: rgba(15, 15, 20, 0.72);
+  backdrop-filter: blur(2px);
+
+  &__anillos {
+    // ~20% más chico que la primera versión.
+    --anillos-tamano: clamp(128px, 24vh, 240px);
+  }
+
+  &__texto {
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+  }
+}

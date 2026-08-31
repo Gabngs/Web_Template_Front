@@ -1,0 +1,102 @@
+<p-confirmDialog />
+
+<div class="admin-page admin-page--wide">
+  <h2>Mantenimiento de Sistemas</h2>
+
+  @if (!canView()) {
+    <p class="admin-page__denied">No tenés permisos para ver el catálogo de sistemas.</p>
+  } @else {
+    <p-toolbar>
+      <ng-template pTemplate="left">
+        <p-iconfield>
+          <p-inputicon class="pi pi-search" />
+          <input pInputText type="text" placeholder="Buscar..."
+            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            aria-label="Buscar sistemas" />
+        </p-iconfield>
+      </ng-template>
+      <ng-template pTemplate="right">
+        @if (canCreate()) {
+          <p-button type="button" label="Nuevo Sistema" icon="pi pi-plus" [style]="{'min-width':'155px'}"
+            severity="success" variant="outlined" [raised]="true" (onClick)="openNew()"></p-button>
+        }
+      </ng-template>
+    </p-toolbar>
+
+    <div class="table-container">
+      <p-table #dt [value]="data()" [paginator]="true" [rows]="rows"
+        [rowsPerPageOptions]="rowsPerPageOptions" [scrollable]="true" scrollHeight="flex"
+        [showCurrentPageReport]="true" [currentPageReportTemplate]="tableMessage"
+        [globalFilterFields]="['codigo', 'descripcion']" styleClass="p-datatable-sm">
+
+        <ng-template #header>
+          <tr>
+            <th scope="col" pSortableColumn="codigo">Código <p-sortIcon field="codigo" /></th>
+            <th scope="col" pSortableColumn="descripcion">Descripción <p-sortIcon field="descripcion" /></th>
+            <th scope="col">Estado</th>
+            @if (canUpdate() || canDelete()) {
+              <th scope="col" style="width: 120px">Acciones</th>
+            }
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-item>
+          <tr>
+            <td>{{ item.codigo }}</td>
+            <td>{{ item.descripcion }}</td>
+            <td>
+              @if (canUpdate()) {
+                <button pButton type="button" [label]="item.activo ? 'Activo' : 'Inactivo'"
+                  [severity]="item.activo ? 'success' : 'danger'" class="p-button-sm p-button-outlined"
+                  [disabled]="loading()" [attr.aria-label]="item.activo ? 'Inactivar sistema' : 'Activar sistema'"
+                  (click)="cambiarEstado(item)"></button>
+              } @else {
+                <p-tag [value]="item.activo ? 'Activo' : 'Inactivo'" [severity]="item.activo ? 'success' : 'danger'" />
+              }
+            </td>
+            @if (canUpdate() || canDelete()) {
+              <td>
+                @if (canUpdate()) {
+                  <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
+                    (click)="openEdit(item)" title="Editar"></button>
+                }
+                @if (canDelete()) {
+                  <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                    (click)="confirmDelete(item)" title="Eliminar"></button>
+                }
+              </td>
+            }
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="4" class="text-center">No se encontraron sistemas.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</div>
+
+<p-dialog [(visible)]="showDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '450px' }"
+  [header]="editMode() ? 'Editar Sistema' : 'Nuevo Sistema'">
+  <form class="admin-form" (ngSubmit)="save()">
+    <p-floatlabel>
+      <input pInputText id="codigo" [(ngModel)]="form.codigo" name="codigo" class="admin-form__input" />
+      <label for="codigo">Código *</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <input pInputText id="descripcion" [(ngModel)]="form.descripcion" name="descripcion" class="admin-form__input" />
+      <label for="descripcion">Descripción *</label>
+    </p-floatlabel>
+
+    <div class="flex items-center gap-2">
+      <p-toggleswitch inputId="activo" [(ngModel)]="form.activo" name="activo" />
+      <label for="activo">Activo</label>
+    </div>
+
+    <p-button type="submit" label="Guardar" [loading]="loading()" class="admin-form__submit" />
+  </form>
+</p-dialog>

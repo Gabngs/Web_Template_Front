@@ -1,0 +1,185 @@
+<p-confirmDialog />
+
+<div class="admin-page admin-page--wide">
+  <h2>Mantenimiento de Menús</h2>
+
+  @if (!canView()) {
+  <p class="admin-page__denied">No tenés permisos para ver los menús.</p>
+  } @else {
+  <p-toolbar>
+    <ng-template pTemplate="left">
+      <div class="flex flex-col sm:flex-row gap-2 w-full">
+        <p-iconfield>
+          <p-inputicon class="pi pi-search" />
+          <input pInputText type="text" placeholder="Buscar por título..."
+            (input)="filtrarArbol(dt, $any($event.target).value)" aria-label="Buscar menús" />
+        </p-iconfield>
+
+        <p-select [options]="sistemas()" optionLabel="descripcion" optionValue="id" placeholder="Sistema"
+          [ngModel]="sistemaSeleccionado()" (ngModelChange)="sistemaSeleccionado.set($event)" />
+      </div>
+    </ng-template>
+    <ng-template pTemplate="right">
+      <p-button type="button" label="Actualizar" icon="pi pi-refresh" [style]="{'min-width':'155px'}"
+        severity="help" variant="outlined" [raised]="true" (onClick)="getData()"></p-button>
+      @if (canCreate()) {
+      <p-button type="button" label="Nuevo Menú" icon="pi pi-plus" [style]="{'min-width':'155px'}"
+        severity="success" variant="outlined" [raised]="true" (onClick)="openNew()"></p-button>
+      }
+    </ng-template>
+  </p-toolbar>
+
+  <div class="table-container">
+    <p-treeTable #dt [value]="treeNodos()" [scrollable]="true" scrollHeight="flex"
+      [globalFilterFields]="['titulo', 'ruta']" dataKey="id"
+      [paginator]="true" [rows]="rows" [rowsPerPageOptions]="rowsPerPageOptions"
+      [showCurrentPageReport]="true" [currentPageReportTemplate]="tableMessage"
+      styleClass="p-datatable-sm">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th scope="col">Título</th>
+          <th scope="col">Ruta</th>
+          <th scope="col" >Ícono</th>
+          <th scope="col" class="text-center">Orden</th>
+          <th scope="col" class="text-center">Estado</th>
+          <th scope="col" class="text-center">Permisos</th>
+          @if (canCreate() || canUpdate() || canDelete()) {
+          <th scope="col" style="width: 140px" class="text-center">Acciones</th>
+      }
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-rowNode let-rowData="rowData">
+        <tr>
+          <td>
+            <p-treeTableToggler [rowNode]="rowNode" />
+            {{ rowData.titulo }}
+          </td>
+          <td>{{ rowData.ruta ?? '—' }}</td>
+          <td>
+            @if (rowData.nombre_icon) {
+            <span class="icon-option"><i class="pi pi-{{ rowData.nombre_icon }}"></i> {{ rowData.nombre_icon }}</span>
+            } @else {
+            —
+            }
+          </td>
+          <td class="text-center">{{ rowData.orden }}</td>
+          <td class="text-center">
+            @if (canUpdate()) {
+            <button pButton type="button" [label]="rowData.activo ? 'Activo' : 'Inactivo'"
+              [severity]="rowData.activo ? 'success' : 'danger'" class="p-button-sm p-button-outlined"
+              [disabled]="loading()" [attr.aria-label]="rowData.activo ? 'Inactivar menú' : 'Activar menú'"
+              (click)="cambiarEstado(rowData)"></button>
+            } @else {
+            <p-tag [value]="rowData.activo ? 'Activo' : 'Inactivo'"
+              [severity]="rowData.activo ? 'success' : 'danger'" />
+            }
+          </td>
+          <td class="text-center">
+            @if (canUpdate()) {
+            <button pButton icon="pi pi-shield" class="p-button-raised p-button-info p-button-text" (click)="openPermisos(rowData)"
+              label="Permisos requeridos"></button>
+            } @else {
+            <span class="text-muted-color">—</span>
+            }
+          </td>
+          @if (canCreate() || canUpdate() || canDelete()) {
+          <td class="text-center">
+            @if (canCreate()) {
+            <button pButton icon="pi pi-plus" class="p-button-rounded p-button-text p-button-info"
+              (click)="openNewSubmenu(rowData)" title="Agregar submenú"></button>
+            }
+            @if (canUpdate()) {
+            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
+              (click)="openEdit(rowData)" title="Editar"></button>
+            }
+            @if (canDelete()) {
+            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+              (click)="confirmDelete(rowData)" title="Eliminar"></button>
+            }
+          </td>
+          }
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" style="text-align:center;">No se encontraron menús para este sistema.</td>
+        </tr>
+      </ng-template>
+    </p-treeTable>
+  </div>
+  }
+</div>
+
+<!-- ═══════════════ Dialog: Nuevo/Editar Menú ═══════════════ -->
+<p-dialog [(visible)]="showDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '500px' }"
+  [header]="editMode() ? 'Editar Menú' : 'Nuevo Menú'">
+  <form class="admin-form" (ngSubmit)="save()">
+    <p-floatlabel>
+      <input pInputText id="titulo" [(ngModel)]="form.titulo" name="titulo" class="admin-form__input" />
+      <label for="titulo">Título *</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <input pInputText id="descripcion" [(ngModel)]="form.descripcion" name="descripcion" class="admin-form__input" />
+      <label for="descripcion">Descripción</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <input pInputText id="ruta" [(ngModel)]="form.ruta" name="ruta" class="admin-form__input" />
+      <label for="ruta">Ruta (dejar vacío si es un contenedor)</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <p-select inputId="nombre_icon" [(ngModel)]="form.nombre_icon" name="nombre_icon" [options]="iconOptions"
+        optionLabel="label" optionValue="name" [filter]="true" filterBy="label" [showClear]="true"
+        class="admin-form__input">
+        <ng-template #selectedItem let-seleccionado>
+          <span class="icon-option"><i class="pi pi-{{ seleccionado.name }}"></i> {{ seleccionado.label }}</span>
+        </ng-template>
+        <ng-template #item let-opcion>
+          <span class="icon-option"><i class="pi pi-{{ opcion.name }}"></i> {{ opcion.label }}</span>
+        </ng-template>
+      </p-select>
+      <label for="nombre_icon">Ícono</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <p-select inputId="parent_id" [(ngModel)]="form.parent_id" name="parent_id" [options]="parentOptions()"
+        optionLabel="label" optionValue="id" class="admin-form__input" />
+      <label for="parent_id">Menú padre</label>
+    </p-floatlabel>
+
+    <p-floatlabel>
+      <p-inputNumber inputId="orden" [(ngModel)]="form.orden" name="orden" [min]="0" class="admin-form__input" />
+      <label for="orden">Orden</label>
+    </p-floatlabel>
+
+    <div class="flex items-center gap-2">
+      <p-toggleswitch inputId="dashboard" [(ngModel)]="form.dashboard" name="dashboard" />
+      <label for="dashboard">Mostrar como acceso directo en el dashboard</label>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <p-toggleswitch inputId="activo" [(ngModel)]="form.activo" name="activo" />
+      <label for="activo">Activo</label>
+    </div>
+
+    <p-button type="submit" label="Guardar" [loading]="loading()" class="admin-form__submit" />
+  </form>
+</p-dialog>
+
+<!-- ═══════════════ Dialog: Permisos Requeridos ═══════════════ -->
+<app-asignacion-picklist-dialog
+  [(visible)]="showPermisosDialog"
+  [header]="'Permiso requerido — ' + (menuPermisos?.titulo ?? '')"
+  [subtitulo]="'Elegí el permiso que desbloquea el menú ' + (menuPermisos?.titulo ?? '') + '.'"
+  [disponibles]="sourcePermisos()"
+  [asignados]="targetPermisos()"
+  tipo="permiso"
+  [unico]="true"
+  [loading]="loadingPermisos()"
+  (guardar)="savePermisos($event)"
+/>

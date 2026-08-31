@@ -1,0 +1,19 @@
+<div style="padding: 1.5rem 1rem;">
+  <h2>Hola, {{ auth.usuario()?.nombre ?? 'de nuevo' }}</h2>
+  <p style="color: var(--p-text-muted-color); margin: 0 0 1.5rem;">Panel administrativo de {{ appName }}.</p>
+
+  <div class="dashboard-accesos">
+    @for (item of accesos(); track item.id) {
+      <a [routerLink]="item.ruta" class="dashboard-accesos__link">
+        <p-card styleClass="dashboard-accesos__card">
+          <div class="dashboard-accesos__content">
+            <i class="pi pi-{{ item.nombre_icon ?? 'circle' }}" style="font-size: 1.5rem; color: var(--p-primary-color);"></i>
+            <span>{{ item.titulo }}</span>
+          </div>
+        </p-card>
+      </a>
+    } @empty {
+      <p style="color: var(--p-text-muted-color);">No tenés accesos directos configurados todavía.</p>
+    }
+  </div>
+</div>

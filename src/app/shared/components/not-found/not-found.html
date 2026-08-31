@@ -1,0 +1,21 @@
+<div class="nf">
+  <div class="nf__card">
+    <div class="nf__hero">
+      <span class="nf__ghost">404</span>
+      <app-anillos-loader class="nf__anillos" />
+    </div>
+
+    <h2 class="nf__title">Te fuiste del mapa...</h2>
+    <p class="nf__text">
+      Este menú existe, pero su pantalla todavía no está construida — o la ruta se mudó de lugar.
+      O tal vez no tienes permisos para acceder (ง¬_¬)ง 
+    </p>
+
+    <div class="nf__actions">
+      <p-button label="Volver al inicio" icon="pi pi-home" routerLink="/dashboard" />
+      <button type="button" class="nf__back" (click)="volverAtras()">
+        <i class="pi pi-arrow-left"></i> Volver atrás
+      </button>
+    </div>
+  </div>
+</div>

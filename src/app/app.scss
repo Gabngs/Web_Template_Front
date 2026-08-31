@@ -1,0 +1,9 @@
+// El template no tiene chrome de marketing: /login y todo lo que cuelga de
+// /dashboard fijan la vista al viewport y manejan su propio scroll interno
+// (el admin-shell vía el layout de Sakai; el login con su propio layout).
+main.chrome-off {
+  padding-top: 0;
+  min-height: 0;
+  height: 100vh;
+  overflow: hidden;
+}

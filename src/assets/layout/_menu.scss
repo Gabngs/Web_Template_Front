@@ -36,6 +36,39 @@
         }
     }
 
+    // Un menú raíz que ES navegable (con ruta, sin hijos — ej. "Dashboard") NO
+    // es una sección: se muestra su <a> como ítem normal. Sin esto, la regla
+    // `.layout-root-menuitem > a { display:none }` lo dejaba sin forma de
+    // navegar. Ver app-menuitem.ts (esRootHoja).
+    .layout-root-menuitem.layout-root-menuitem-hoja > a {
+        display: flex;
+        align-items: center;
+        position: relative;
+        outline: 0 none;
+        color: var(--text-color);
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        border-radius: var(--content-border-radius);
+        transition: box-shadow var(--element-transition-duration);
+
+        .layout-menuitem-icon {
+            margin-right: 0.5rem;
+        }
+
+        &.active-route {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        &:hover {
+            background-color: var(--surface-hover);
+        }
+
+        &:focus {
+            @include focused-inset();
+        }
+    }
+
     a {
         user-select: none;
 
@@ -95,45 +128,14 @@
             }
         }
 
+        // Submenús anidados: gsp usa menús de 2 niveles (sección → ítems).
+        // Se saca el margin-left escalonado de Sakai (1rem, 2rem, 2.5rem…),
+        // que dejaba los ítems "en escalera". Si algún día hay un 3.º nivel,
+        // lleva UN solo sangrado suave y parejo, no una escalera.
         ul {
             overflow: hidden;
             border-radius: var(--content-border-radius);
-
-            li {
-                a {
-                    margin-left: 1rem;
-                }
-
-                li {
-                    a {
-                        margin-left: 2rem;
-                    }
-
-                    li {
-                        a {
-                            margin-left: 2.5rem;
-                        }
-
-                        li {
-                            a {
-                                margin-left: 3rem;
-                            }
-
-                            li {
-                                a {
-                                    margin-left: 3.5rem;
-                                }
-
-                                li {
-                                    a {
-                                        margin-left: 4rem;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            padding-left: 0.75rem;
         }
     }
 }

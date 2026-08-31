@@ -1,0 +1,254 @@
+<div class="admin-card">
+<p-tabs value="0">
+  <p-tablist>
+    <p-tab value="0">Registro de Modelos</p-tab>
+    <p-tab value="1">Registro de Permisos</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+
+    <!-- ═══════════════ Tab 1 — Modelos ═══════════════ -->
+    <p-tabpanel value="0">
+      <p-toolbar>
+        <ng-template pTemplate="left">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input pInputText type="text" placeholder="Buscar..."
+              (input)="dtModelos.filterGlobal($any($event.target).value, 'contains')"
+              aria-label="Buscar modelos" />
+          </p-iconfield>
+        </ng-template>
+        <ng-template pTemplate="right">
+          @if (canCreateModelo()) {
+            <p-button type="button" label="Nuevo Modelo" icon="pi pi-plus" [style]="{'min-width':'155px'}"
+              severity="success" variant="outlined" [raised]="true" (onClick)="openNewModeloDialog()"></p-button>
+          }
+          <p-button type="button" label="Actualizar modelos" icon="pi pi-refresh" [style]="{'min-width':'155px'}"
+            severity="help" variant="outlined" [raised]="true" (onClick)="loadModelos()"></p-button>
+        </ng-template>
+      </p-toolbar>
+
+      <div class="table-container">
+        <p-table #dtModelos [value]="models()" [paginator]="true" [rows]="rows"
+          [rowsPerPageOptions]="rowsPerPageOption" [scrollable]="true" scrollHeight="flex"
+          [showCurrentPageReport]="true" [currentPageReportTemplate]="tableMessage"
+          [globalFilterFields]="['app_label', 'app_model', 'nombre_display']" >
+
+          <ng-template #header>
+            <tr>
+              <th scope="col" pSortableColumn="app_label">App Label <p-sortIcon field="app_label" /></th>
+              <th scope="col" pSortableColumn="app_model">App Model <p-sortIcon field="app_model" /></th>
+              <th scope="col" pSortableColumn="nombre_display">Nombre Display <p-sortIcon field="nombre_display" /></th>
+              @if (canUpdateModelo()) {
+                <th scope="col" style="width: 120px">Acciones</th>
+              }
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-modelo>
+            <tr>
+              <td>{{ modelo.app_label }}</td>
+              <td>{{ modelo.app_model }}</td>
+              <td>{{ modelo.nombre_display }}</td>
+              @if (canUpdateModelo()) {
+                <td>
+                  <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-warning"
+                    (click)="openEditModeloDialog(modelo)" title="Editar"></button>
+                </td>
+              }
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="4" style="text-align: center;">No se encontraron modelos.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- ═══════════════ Tab 2 — Permisos ═══════════════ -->
+    <p-tabpanel value="1">
+      <p-toolbar>
+        <ng-template pTemplate="left">
+          <p-iconfield>
+            <p-inputicon class="pi pi-search" />
+            <input pInputText type="text" placeholder="Buscar por codename, descripción o modelo..."
+              [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+              aria-label="Buscar permisos" />
+          </p-iconfield>
+        </ng-template>
+        <ng-template pTemplate="right">
+          @if (canCreatePermiso()) {
+            <p-button type="button" label="Nuevo Permiso" icon="pi pi-plus" [style]="{'min-width':'155px'}"
+              severity="success" variant="outlined" [raised]="true" (onClick)="openNewPermisoDialog()"></p-button>
+          }
+          <p-button type="button" label="Actualizar permisos" icon="pi pi-refresh" [style]="{'min-width':'155px'}"
+            severity="help" variant="outlined" [raised]="true" (onClick)="loadPermisos()"></p-button>
+        </ng-template>
+      </p-toolbar>
+
+      <div class="table-container" >
+        <p-table [value]="gruposFiltrados()" dataKey="modeloId"  scrollable="true" scrollHeight="flex"
+          [scrollable]="true" scrollHeight="flex" [paginator]="true" [rows]="rows" [rowsPerPageOptions]="rowsPerPageOption"
+          [showCurrentPageReport]="true" [currentPageReportTemplate]="tableMessage" 
+          >
+
+          <ng-template #header>
+            <tr>
+              <th scope="col" style="width: 3rem"></th>
+              <th scope="col">Modelo</th>
+              <th scope="col">Cantidad de permisos</th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-grupo let-expanded="expanded">
+            <tr>
+              <td>
+                <button type="button" pButton class="p-button-text p-button-rounded" [pRowToggler]="grupo">
+                  <i class="pi" [class.pi-chevron-down]="expanded" [class.pi-chevron-right]="!expanded"></i>
+                </button>
+              </td>
+              <td>{{ grupo.label }}</td>
+              <td>{{ grupo.permisos.length }}</td>
+            </tr>
+          </ng-template>
+
+          <ng-template #expandedrow let-grupo>
+            <tr>
+              <td></td>
+              <td colspan="2">
+                <p-table [value]="grupo.permisos" styleClass="p-datatable-sm">
+                  <ng-template #header>
+                    <tr>
+                      <th scope="col">Codename</th>
+                      <th scope="col">Descripción</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template #body let-permiso>
+                    <tr>
+                      <td>{{ permiso.codename }}</td>
+                      <td>{{ permiso.desc }}</td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="3" style="text-align: center;">No se encontraron permisos.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+  </p-tabpanels>
+</p-tabs>
+</div>
+
+<!-- ═══════════════ Dialog: Nuevo/Editar Modelo ═══════════════ -->
+<p-dialog [(visible)]="newModeloDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '450px' }" header="Nuevo Modelo">
+  <form class="admin-form" (ngSubmit)="saveModelo()">
+    <p-floatlabel>
+      <input pInputText id="new_app_label" [(ngModel)]="modeloForm.app_label" name="new_app_label" class="admin-form__input" />
+      <label for="new_app_label">App Label *</label>
+    </p-floatlabel>
+    <p-floatlabel>
+      <input pInputText id="new_app_model" [(ngModel)]="modeloForm.app_model" name="new_app_model" class="admin-form__input" />
+      <label for="new_app_model">App Model *</label>
+    </p-floatlabel>
+    <p-floatlabel>
+      <input pInputText id="new_nombre_display" [(ngModel)]="modeloForm.nombre_display" name="new_nombre_display" class="admin-form__input" />
+      <label for="new_nombre_display">Nombre Display *</label>
+    </p-floatlabel>
+    <p-button type="submit" label="Guardar" [loading]="loadingModelos()" class="admin-form__submit" />
+  </form>
+</p-dialog>
+
+<p-dialog [(visible)]="editModeloDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '450px' }" header="Editar Modelo">
+  <form class="admin-form" (ngSubmit)="saveModelo()">
+    <p-floatlabel>
+      <input pInputText id="edit_app_label" [(ngModel)]="modeloForm.app_label" name="edit_app_label" class="admin-form__input" />
+      <label for="edit_app_label">App Label *</label>
+    </p-floatlabel>
+    <p-floatlabel>
+      <input pInputText id="edit_app_model" [(ngModel)]="modeloForm.app_model" name="edit_app_model" class="admin-form__input" />
+      <label for="edit_app_model">App Model *</label>
+    </p-floatlabel>
+    <p-floatlabel>
+      <input pInputText id="edit_nombre_display" [(ngModel)]="modeloForm.nombre_display" name="edit_nombre_display" class="admin-form__input" />
+      <label for="edit_nombre_display">Nombre Display *</label>
+    </p-floatlabel>
+    <p-button type="submit" label="Guardar" [loading]="loadingModelos()" class="admin-form__submit" />
+  </form>
+</p-dialog>
+
+<!-- ═══════════════ Dialog: Nuevo Permiso ═══════════════ -->
+<p-dialog [(visible)]="newPermisoDialog" [modal]="true" [dismissableMask]="false" [style]="{ width: '500px' }" header="Nuevo Permiso">
+  <div class="admin-form">
+    <div class="flex items-center gap-2">
+      <p-checkbox [(ngModel)]="manualMode" name="manualMode" [binary]="true" inputId="manualMode" />
+      <label for="manualMode">Registrar manualmente</label>
+    </div>
+
+    @if (!manualMode) {
+      <p-floatlabel>
+        <p-select inputId="modelo_select" [(ngModel)]="selectedModelo" name="modelo_select"
+          [options]="modelos()" optionLabel="app_model" [filter]="true" [resetFilterOnHide]="false"
+          appendTo="body" class="admin-form__input"
+          (onChange)="onModeloSelect($event)">
+          <ng-template #filter>
+            <input pInputText type="text" [(ngModel)]="modeloBusqueda" [ngModelOptions]="{ standalone: true }"
+              placeholder="Escribe una palabra y presiona Enter" style="width: 100%"
+              aria-label="Buscar modelo" (keyup.enter)="cargarModelos(modeloBusqueda)" />
+          </ng-template>
+          <ng-template #item let-m>{{ m.app_label }} - {{ m.app_model }}</ng-template>
+        </p-select>
+        <label for="modelo_select">Modelo *</label>
+      </p-floatlabel>
+
+      @if (selectedModelo) {
+        <div class="permiso-checklist">
+          @for (item of template(); track item.codename) {
+            <div class="flex items-center gap-2">
+              <p-checkbox [(ngModel)]="item.checked" [binary]="true" [disabled]="item.disabled"
+                [inputId]="item.codename" name="item_{{ item.codename }}" />
+              <label [for]="item.codename">
+                {{ item.name }} <code>{{ item.codename }}</code>
+                @if (item.disabled) { <span class="text-muted-color">(ya existe)</span> }
+              </label>
+            </div>
+          }
+        </div>
+      }
+    } @else {
+      <p-floatlabel>
+        <p-select inputId="manual_modelo" [(ngModel)]="selectedModelo" name="manual_modelo"
+          [options]="modelos()" optionLabel="app_model" [filter]="true" [resetFilterOnHide]="false"
+          appendTo="body" class="admin-form__input"
+          (onChange)="manualForm.content_model_id = $event.value.id">
+          <ng-template #filter>
+            <input pInputText type="text" [(ngModel)]="modeloBusqueda" [ngModelOptions]="{ standalone: true }"
+              placeholder="Escribe una palabra y presiona Enter" style="width: 100%"
+              aria-label="Buscar modelo" (keyup.enter)="cargarModelos(modeloBusqueda)" />
+          </ng-template>
+          <ng-template #item let-m>{{ m.app_label }} - {{ m.app_model }}</ng-template>
+        </p-select>
+        <label for="manual_modelo">Modelo *</label>
+      </p-floatlabel>
+      <p-floatlabel>
+        <input pInputText id="manual_codename" [(ngModel)]="manualForm.codename" name="manual_codename" class="admin-form__input" />
+        <label for="manual_codename">Codename *</label>
+      </p-floatlabel>
+      <p-floatlabel>
+        <textarea pTextarea id="manual_desc" [(ngModel)]="manualForm.desc" name="manual_desc" rows="3" class="admin-form__input"></textarea>
+        <label for="manual_desc">Descripción *</label>
+      </p-floatlabel>
+    }
+
+    <p-button type="button" label="Guardar" [loading]="loadingPermisos()" class="admin-form__submit" (onClick)="savePermisos()" />
+  </div>
+</p-dialog>
