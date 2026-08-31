@@ -4,6 +4,9 @@ export const environment = {
   // ── Configuración por sistema (editar al clonar el template) ─────────────
   appName: 'Web Template', // nombre visible: topbar, footer, login, inicio
   appShortName: 'WT', // sigla corta: footer
+  // Código del sistema propio en siaw_sistemas. El sidebar y Mantenimiento de
+  // Menús filtran por este código (el template es mono-sistema: solo ve lo suyo).
+  sistemaCodigo: 'NEXO',
 
   // ── Backend ────────────────────────────────────────────────────────────
   apiUrl: 'http://localhost:8877/api/',

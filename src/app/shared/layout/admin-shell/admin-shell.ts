@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { AuthService } from '@services/api/auth.service';
 import { AppLayout } from '@shared/layout/shell/app-layout';
 
-// Punto de montaje de la ruta /dashboard (ver dashboard-admin.routes.ts).
+// Punto de montaje del área privada (ver app.routes.ts: path '' con children).
 // Solo hace el bootstrap de sesión; el chrome (topbar/sidebar/footer/toast)
 // lo pone AppLayout — el layout adaptado de Sakai.
 @Component({

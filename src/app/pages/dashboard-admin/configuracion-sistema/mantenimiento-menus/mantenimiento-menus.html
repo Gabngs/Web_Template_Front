@@ -14,9 +14,6 @@
           <input pInputText type="text" placeholder="Buscar por título..."
             (input)="filtrarArbol(dt, $any($event.target).value)" aria-label="Buscar menús" />
         </p-iconfield>
-
-        <p-select [options]="sistemas()" optionLabel="descripcion" optionValue="id" placeholder="Sistema"
-          [ngModel]="sistemaSeleccionado()" (ngModelChange)="sistemaSeleccionado.set($event)" />
       </div>
     </ng-template>
     <ng-template pTemplate="right">
@@ -79,7 +76,7 @@
           <td class="text-center">
             @if (canUpdate()) {
             <button pButton icon="pi pi-shield" class="p-button-raised p-button-info p-button-text" (click)="openPermisos(rowData)"
-              label="Permisos requeridos"></button>
+              label="Permiso requerido"></button>
             } @else {
             <span class="text-muted-color">—</span>
             }
@@ -105,7 +102,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" style="text-align:center;">No se encontraron menús para este sistema.</td>
+          <td colspan="7" class="text-center">No se encontraron menús para este sistema.</td>
         </tr>
       </ng-template>
     </p-treeTable>
@@ -171,7 +168,7 @@
   </form>
 </p-dialog>
 
-<!-- ═══════════════ Dialog: Permisos Requeridos ═══════════════ -->
+<!-- ═══════════════ Dialog: Permiso Requerido ═══════════════ -->
 <app-asignacion-picklist-dialog
   [(visible)]="showPermisosDialog"
   [header]="'Permiso requerido — ' + (menuPermisos?.titulo ?? '')"

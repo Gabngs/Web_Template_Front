@@ -18,7 +18,7 @@ import { environment } from '../../../../environments/environment';
     template: ` <div class="layout-topbar">
             <!-- Izquierda: logo · botón de menú · buscador -->
             <div class="layout-topbar-logo-container">
-                <a class="layout-topbar-logo" routerLink="/dashboard">
+                <a class="layout-topbar-logo" routerLink="/">
                     <i class="pi pi-sparkles" style="font-size: 1.35rem"></i>
                     <span>{{ appName }}</span>
                 </a>
@@ -88,7 +88,7 @@ export class AppTopbar {
     readonly menuSearch = viewChild.required(MenuSearch);
 
     readonly userMenuItems: MenuItem[] = [
-        { label: 'Inicio', icon: 'pi pi-home', routerLink: '/dashboard' },
+        { label: 'Inicio', icon: 'pi pi-home', routerLink: '/' },
         { separator: true },
         { label: 'Cerrar sesión', icon: 'pi pi-sign-out', command: () => this.logout() },
     ];

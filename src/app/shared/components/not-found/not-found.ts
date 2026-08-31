@@ -24,7 +24,7 @@ export class NotFound {
     if (history.length > 1) {
       this.location.back();
     } else {
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/']);
     }
   }
 }

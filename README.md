@@ -14,13 +14,13 @@ Angular 21 · PrimeNG 21 (preset Aura) · Tailwind v4 · Vitest.
 |---|---|
 | **Auth / seguridad** | Login con cifrado RSA del password (`jsencrypt` + challenge/nonce), guard de ruta, interceptor de token + manejo de 401/403, `TokenStorageService`, diálogo de cambio de password forzado |
 | **Loading** | Interceptor HTTP + `LoadingOverlayService` + overlay global (`app-global-loading`, `anillos-loader`) |
-| **Shell admin** (`/dashboard`) | Layout adaptado de Sakai: topbar, sidebar con menú desde backend, footer, configurador de tema (color / superficie / modo menú), buscador de menús (Ctrl+K), toggle claro/oscuro |
-| **Parámetros de sistema** (`/dashboard/parametros-sistema`) | Control de usuarios · Mantenimiento de menús · Mantenimiento de roles · Mantenimiento de sistemas · Modelos y permisos |
-| **Flujo de permisos** | `PermisoService` (rol + permisos + menús desde `/auth/me`), servicios CRUD de usuarios / roles / menús / sistemas / permiso-rol / permiso-usuario / rol-usuario |
+| **Shell admin** (raíz `/`) | Layout adaptado de Sakai: topbar, sidebar con menú desde backend, footer, configurador de tema (color / superficie / modo menú), buscador de menús (Ctrl+K), toggle claro/oscuro |
+| **Configuración del sistema** (`/configuracion-sistema`) | Control de usuarios · Mantenimiento de menús · Mantenimiento de roles · Modelos y permisos |
+| **Flujo de permisos** | `PermisoService` (rol + permisos + menús desde `/auth/me`), servicios CRUD de usuarios / roles / menús / permiso-rol / permiso-usuario / rol-usuario. **Mono-sistema**: el sidebar y Mantenimiento de Menús filtran por `environment.sistemaCodigo` (no administra otros sistemas como gsp-front) |
 | **Helpers compartidos** | `helper-message` (toasts + errores HTTP), `helper-validaciones` (requeridos, correo, DNI/RUC/teléfono), `prime-icons`, árboles de menú |
 | **Infra** | Alias de paths (`@services`, `@shared`, …), generador de rutas por carpetas (`npm run gen:routes`), hook de pre-commit, `nginx-template.conf`, `vercel.json` |
 
-Rutas: `/` → `/login` → (autenticado) `/dashboard`.
+Rutas: sin sesión `/` → `/login`; con sesión `/` = inicio y `/configuracion-sistema/...` las pantallas de administración. Los menús de `siaw_menus` guardan la ruta absoluta (ej. `/configuracion-sistema/mantenimiento-roles`).
 
 ---
 
@@ -41,6 +41,8 @@ Requiere un backend con los endpoints `auth/*` y `siaw_*` (ver `src/environments
 2. **`src/environments/environment.ts`** y **`environment.production.ts`**:
    - `appName` / `appShortName` — nombre visible (topbar, footer, login, inicio).
    - `apiUrl` — URL del backend.
+   - `sistemaCodigo` — código del sistema en `siaw_sistemas` (debe existir ahí). El
+     sidebar y Mantenimiento de Menús filtran por él; si no coincide, no se ve ningún menú.
 3. **`src/index.html`** → `<title>`.
 4. **`public/favicon.ico`** → ícono propio.
 5. **Tema** (opcional): `src/app/app.config.ts` → `AppPreset`, cambiar la paleta `violet` por la del sistema (`indigo`, `blue`, …). Default de arranque en `src/app/shared/layout/shell/layout.service.ts`.
@@ -48,7 +50,9 @@ Requiere un backend con los endpoints `auth/*` y `siaw_*` (ver `src/environments
 7. **Despliegue**: ajustar `nginx-template.conf` (dominio, ruta, puerto del backend) o `vercel.json`.
 
 Los menús, roles y permisos **no** se tocan en código: se cargan del backend y se
-administran desde `/dashboard/parametros-sistema`.
+administran desde `/configuracion-sistema`. El backend **no** crea menús al dar de alta
+un sistema — se cargan a mano en Mantenimiento de Menús (con su `ruta`, ej.
+`/configuracion-sistema/mantenimiento-roles`) y se otorgan al rol del usuario.
 
 ---
 

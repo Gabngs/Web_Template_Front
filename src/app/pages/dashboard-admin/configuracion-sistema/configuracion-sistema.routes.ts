@@ -3,7 +3,7 @@
 // { "default": "carpeta-hermana" } (redirect relativo) o { "redirectTo": "/ruta" }.
 import { Routes } from '@angular/router';
 
-export const PARAMETROS_SISTEMA_ROUTES: Routes = [
+export const CONFIGURACION_SISTEMA_ROUTES: Routes = [
   { path: '', redirectTo: 'control-usuarios', pathMatch: 'full' },
   {
     path: 'control-usuarios',
@@ -19,13 +19,6 @@ export const PARAMETROS_SISTEMA_ROUTES: Routes = [
     path: 'mantenimiento-roles',
     loadComponent: () =>
       import('./mantenimiento-roles/mantenimiento-roles').then((m) => m.MantenimientoRoles),
-  },
-  {
-    path: 'mantenimiento-sistemas',
-    loadComponent: () =>
-      import('./mantenimiento-sistemas/mantenimiento-sistemas').then(
-        (m) => m.MantenimientoSistemas,
-      ),
   },
   {
     path: 'modelos-permisos',

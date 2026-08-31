@@ -66,13 +66,11 @@ export function menusAPrimeNgItems(nodos: IMenuNode[]): MenuItem[] {
 }
 
 // El <a [routerLink]> del sidebar vive dentro de AdminShell (no de la página
-// con la ruta), así que una ruta sin "/" inicial se resuelve como RELATIVA
-// a /dashboard en vez de absoluta — el resultado no matchea ninguna ruta
-// registrada, ni siquiera el wildcard "**" (que solo atrapa rutas que sí
-// entraron al árbol de /dashboard), y termina expulsando al usuario a la
-// wildcard global de app.routes.ts (la web pública). Se normaliza acá como
-// red de seguridad, aunque el form de Mantenimiento de Menús ya la guarda
-// bien — cubre datos viejos o cargados por otra vía (seeder, importación).
+// con la ruta), así que una ruta sin "/" inicial se resuelve como RELATIVA al
+// path actual en vez de absoluta — no matchea ninguna ruta registrada y
+// termina cayendo en la wildcard "**". Se normaliza a absoluta acá como red
+// de seguridad, aunque el form de Mantenimiento de Menús ya la guarda bien —
+// cubre datos viejos o cargados por otra vía (seeder, importación).
 function rutaAbsoluta(ruta: string | null | undefined): string | undefined {
   if (!ruta) return undefined;
   return ruta.startsWith('/') ? ruta : `/${ruta}`;

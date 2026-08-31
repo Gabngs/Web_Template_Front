@@ -25,9 +25,14 @@ import { construirArbolMenusCrud, menusConSangria } from '@shared/helpers/menu-c
 import { PRIME_ICON_OPTIONS } from '@shared/helpers/prime-icons.helper';
 import { HelperMessage } from '@shared/helpers/helper-message';
 import { AsignacionPicklistDialog, IAsignacionItem } from '@shared/components/asignacion-picklist-dialog/asignacion-picklist-dialog';
+import { environment } from '../../../../../environments/environment';
 
-interface ISistemaOpcion { id: string; descripcion: string }
 interface IPadreOpcion { id: string; label: string }
+
+// El template es mono-sistema — no hay selector de sistema en la UI como en
+// gsp-front (que administra varios). El id se resuelve una vez al montar
+// filtrando siaw_sistemas por este código (mismo de environment/PermisoService).
+const CODIGO_SISTEMA_PROPIO = environment.sistemaCodigo;
 
 @Component({
   selector: 'app-mantenimiento-menus',
@@ -35,7 +40,6 @@ interface IPadreOpcion { id: string; label: string }
     FormsModule, InputText, IconField, InputIcon, Select, Button, ButtonDirective, ToggleSwitch,
     FloatLabel, ConfirmDialog, Tag, Toolbar, TreeTableModule, Dialog, InputNumber, AsignacionPicklistDialog,
   ],
-  
   providers: [ConfirmationService],
   templateUrl: './mantenimiento-menus.html',
   styleUrl: './mantenimiento-menus.scss',
@@ -56,17 +60,17 @@ export class MantenimientoMenus implements OnInit {
 
   // ─── Datos ────────────────────────────────
   menusFlat  = signal<IMenu[]>([]);
-  sistemas   = signal<ISistemaOpcion[]>([]);
   allPermisos = signal<IContentPermisoTiny[]>([]);
 
-  sistemaSeleccionado = signal<string | null>(null);
+  // Id del sistema propio, resuelto una sola vez — ver resolverSistemaPropio().
+  private readonly sistemaId = signal<string | null>(null);
   searchTerm = signal('');
   rows = 20;
   rowsPerPageOptions = [10, 20, 50];
   tableMessage = 'Mostrando {first} a {last} de {totalRecords} registros';
 
   readonly menusDelSistema = computed<IMenu[]>(() => {
-    const sistemaId = this.sistemaSeleccionado();
+    const sistemaId = this.sistemaId();
     const menus = this.menusFlat();
     return sistemaId ? menus.filter(m => m.sistema?.id === sistemaId) : menus;
   });
@@ -91,24 +95,26 @@ export class MantenimientoMenus implements OnInit {
   form: IMenuStoreUpdate = { titulo: '', parent_id: null, activo: true, dashboard: false, orden: 0 };
 
   ngOnInit(): void {
-    this.getSistemas();
+    this.resolverSistemaPropio();
     this.getData();
     this.getCatalogoPermisos();
   }
 
-  getSistemas(): void {
-    this.sistemasSvc.getIndex().subscribe({
+
+  resolverSistemaPropio(): void {
+    this.sistemasSvc.getIndex({ codigo: CODIGO_SISTEMA_PROPIO }).subscribe({
       next: res => {
-        const opciones = res.data.map(s => ({ id: s.id!, descripcion: s.descripcion ?? s.codigo ?? '' }));
-        this.sistemas.set(opciones);
-        if (opciones.length && !this.sistemaSeleccionado()) {
-          this.sistemaSeleccionado.set(opciones[0].id);
+        const sistema = res.data.find(s => s.codigo === CODIGO_SISTEMA_PROPIO) ?? res.data[0];
+        if (!sistema?.id) {
+          this.helperMessage.warn(`No se encontró el sistema propio (${CODIGO_SISTEMA_PROPIO}) — verificá que exista en siaw_sistemas.`);
+          return;
         }
+        this.sistemaId.set(sistema.id);
       },
-      error: err => this.helperMessage.notifyHttpError(err, 'Error al cargar los sistemas.'),
+      error: err => this.helperMessage.notifyHttpError(err, 'Error al resolver el sistema propio.'),
     });
   }
-  
+
   getData(): void {
     this.loading.set(true);
     this.menusSvc.getIndex().subscribe({
@@ -145,7 +151,7 @@ export class MantenimientoMenus implements OnInit {
     this.showDialog.set(true);
   }
 
- 
+
   openNewSubmenu(item: IMenu): void {
     if (!item.id) return;
     this.editing.set(null);
@@ -182,9 +188,9 @@ export class MantenimientoMenus implements OnInit {
       this.helperMessage.warn('El título es obligatorio.');
       return;
     }
-    const sistemaId = this.sistemaSeleccionado();
+    const sistemaId = this.sistemaId();
     if (!this.editMode() && !sistemaId) {
-      this.helperMessage.warn('Seleccioná un sistema en el filtro del toolbar.');
+      this.helperMessage.warn('No se pudo resolver el sistema propio todavía — reintentá en un momento.');
       return;
     }
     this.loading.set(true);
@@ -212,6 +218,7 @@ export class MantenimientoMenus implements OnInit {
     });
   }
 
+  // Toggle de estado desde la tabla — protegido por canUpdate() en el template.
   cambiarEstado(item: IMenu): void {
     if (!item.id) return;
     const activo = !item.activo;
@@ -248,7 +255,7 @@ export class MantenimientoMenus implements OnInit {
     });
   }
 
-  // ─── Permisos requeridos (picklist) ────────
+  // ─── Permiso requerido (picklist, único) ────
   loadingPermisos   = signal(false);
   showPermisosDialog = signal(false);
   menuPermisos: IMenu | null = null;

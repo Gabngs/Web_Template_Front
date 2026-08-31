@@ -3,10 +3,13 @@ import { MenuItem } from 'primeng/api';
 import { IRolRelation } from '@interfaces/models/rol.interface';
 import { ISesionMenu } from '@interfaces/models/sesion-menu.interface';
 import { construirArbolMenus, menusAPrimeNgItems, menusPlanosNavegables, IMenuBusqueda } from '@shared/helpers/menu-tree.helper';
+import { environment } from '../../../environments/environment';
 import { SistemasService } from './sistemas.service';
 
 
-const CODIGO_SISTEMA_PROPIO = 'NEXO';
+// Código del sistema propio — se configura en environment.sistemaCodigo (un
+// solo lugar, compartido con Mantenimiento de Menús).
+const CODIGO_SISTEMA_PROPIO = environment.sistemaCodigo;
 
 @Injectable({ providedIn: 'root' })
 export class PermisoService {

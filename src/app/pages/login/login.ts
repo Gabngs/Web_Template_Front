@@ -36,7 +36,7 @@ export class Login {
     this.loading.set(true);
     try {
       await this.auth.login(this.email, this.password);
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/']);
     } catch (err) {
       if (err instanceof HttpErrorResponse && (err.status === 401 || err.status === 422)) {
         this.error.set('Credenciales incorrectas.');

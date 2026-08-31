@@ -9,10 +9,10 @@ export const DASHBOARD_ADMIN_ROUTES: Routes = [
     children: [
       { path: '', loadComponent: () => import('./inicio/inicio').then((m) => m.Inicio) },
       {
-        path: 'parametros-sistema',
+        path: 'configuracion-sistema',
         loadChildren: () =>
-          import('./parametros-sistema/parametros-sistema.routes').then(
-            (m) => m.PARAMETROS_SISTEMA_ROUTES,
+          import('./configuracion-sistema/configuracion-sistema.routes').then(
+            (m) => m.CONFIGURACION_SISTEMA_ROUTES,
           ),
       },
       {
